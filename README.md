@@ -5,8 +5,15 @@
 ```bash
 /www/server/panel/BTPanel/templates/default
 ```
-* python文件替换路径：/www/server/panel/class
-* 删除文件 /www/server/panel/BTPanel/static/js/index.js 第 65-67 行 
+* python文件替换路径：
+```bash
+/www/server/panel/class
+```
+* 删除文件 
+```bash
+/www/server/panel/BTPanel/static/js/index.js 
+```
+第 65-67 行：
 ```bash
 if (bind_user == 'True') {
     show_force_bind();
