@@ -9,18 +9,9 @@
 ```bash
 /www/server/panel/class
 ```
-* 删除文件 
-```bash
-/www/server/panel/BTPanel/static/js/index.js 
-```
-第 65-67 行：
-```bash
-if (bind_user == 'True') {
-    show_force_bind();
-}
-```
 * 然后执行：
 ```bash
+sed -i "s|if (bind_user == 'True') {|if (bind_user == 'REMOVED') {|g" /www/server/panel/BTPanel/static/js/index.js
 chattr +i /www/server/panel/class/panelPlugin.py
 chattr +i /www/server/panel/BTPanel/templates/default/index.html
 chattr +i /www/server/panel/BTPanel/static/js/index.js
