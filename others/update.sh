@@ -38,15 +38,16 @@ fi
 
 download_Url=$NODE_URL
 setup_path=/www
-version=$(curl -Ss --connect-timeout 5 -m 2 http://www.bt.cn/api/panel/get_version)
-if [ "$version" = '' ];then
-	version='7.8.0'
-fi
-armCheck=$(uname -m|grep arm)
-if [ "${armCheck}" ];then
-	version='7.7.0'
-fi
-wget -T 5 -O /tmp/panel.zip http://pan.qste.com/BTPanel/LinuxPanel-7.7.0.zip
+# version=$(curl -Ss --connect-timeout 5 -m 2 http://www.bt.cn/api/panel/get_version)
+version=7.7.0
+# if [ "$version" = '' ];then
+# 	version='7.8.0'
+# fi
+# armCheck=$(uname -m|grep arm)
+# if [ "${armCheck}" ];then
+# 	version='7.7.0'
+# fi
+wget -T 5 -O /tmp/panel.zip http://bt.qste.com/others/LinuxPanel-7.7.0.zip
 dsize=$(du -b /tmp/panel.zip|awk '{print $1}')
 if [ $dsize -lt 10240 ];then
 	echo "获取更新包失败，请稍后更新或联系宝塔运维"
