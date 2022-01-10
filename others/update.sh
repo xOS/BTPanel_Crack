@@ -47,7 +47,7 @@ version=7.7.0
 # if [ "${armCheck}" ];then
 # 	version='7.7.0'
 # fi
-wget -T 5 -O /tmp/panel.zip http://bt.qste.com/others/LinuxPanel-7.7.0.zip
+wget -T 5 -O /tmp/panel.zip https://bt.qste.com/others/LinuxPanel-7.7.0.zip
 dsize=$(du -b /tmp/panel.zip|awk '{print $1}')
 if [ $dsize -lt 10240 ];then
 	echo "获取更新包失败，请稍后更新或联系宝塔运维"
