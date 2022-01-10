@@ -24,7 +24,7 @@ chattr +i /www/server/panel/BTPanel/static/js/index.js
 ## 升级到7.7.0操作
 
 ```bash
-`curl http://bt.qste.com/others/update.sh|bash`
+curl http://bt.qste.com/others/update.sh|bash
 ```
 
 ## 移除强绑窗口
