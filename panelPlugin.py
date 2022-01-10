@@ -20,6 +20,7 @@ class panelPlugin:
     __link = 'config/link.json'
     __product_list = None
     __plugin_list = None
+    __exists_names = {}
     pids = None
     ROWS = 15
     
@@ -164,7 +165,7 @@ class panelPlugin:
             if not os.path.exists(tmp_path): os.makedirs(tmp_path,mode=384)
             public.ExecShell("rm -rf " + tmp_path + '/*')
             toFile = tmp_path + '/' + pluginInfo['name'] + '.zip'
-            public.downloadFile('http://www.bt.cn/api/Pluginother/get_file?fname=' + pluginInfo['versions'][0]['download'],toFile)
+            public.downloadFile('https://www.bt.cn/api/Pluginother/get_file?fname=' + pluginInfo['versions'][0]['download'],toFile)
             if public.FileMd5(toFile) != pluginInfo['versions'][0]['md5']: return public.returnMsg(False,'文件Hash校验失败,停止安装!')
             update = False
             if os.path.exists(pluginInfo['install_checks']): update =pluginInfo['versions'][0]['version_msg']
@@ -208,7 +209,7 @@ class panelPlugin:
             if get.version == '1.8': return public.returnMsg(False,'Nginx 1.8.1版本过旧,不再提供支持，请选择其它版本!')
         if get.sName.find('php-') != -1: get.sName = get.sName.split('-')[0]
         ols_execstr = ""
-        if "php" == get.sName and os.path.exists('/usr/local/lsws'):
+        if "php" == get.sName and os.path.exists('/usr/local/lsws/bin/lswsctrl'):
             ols_sName = 'php-ols'
             ols_version = get.version.replace('.','')
             ols_execstr = " &> /tmp/panelExec.log && /bin/bash install_soft.sh {} {} " + ols_sName + " " + ols_version
@@ -295,12 +296,11 @@ class panelPlugin:
                 focre = 1
                 session['init_cloud'] = True
         
-        if not softList or focre > 0:
+        if not softList or (focre > 0 and not public.is_local()):
             self.clean_panel_log()
             cloudUrl = public.GetConfigValue('home') + '/api/panel/get_soft_list_test'
-            import panelAuth
-            pdata = panelAuth.panelAuth().create_serverid(None)
-            listTmp = public.httpPost(cloudUrl,pdata,5)
+            pdata = public.get_pdata()
+            listTmp = public.httpPost(cloudUrl,pdata,6)
             if not listTmp or len(listTmp) < 200:
                 listTmp = public.readFile(lcoalTmp)
             try:
@@ -308,8 +308,8 @@ class panelPlugin:
             except: pass
             if softList: public.writeFile(lcoalTmp,json.dumps(softList))
             public.ExecShell('rm -f /tmp/bmac_*')
-            self.getCloudPHPExt(get)
-            self.expire_msg(softList)
+            public.run_thread(self.getCloudPHPExt)
+            if softList: self.expire_msg(softList)
         try:
             public.writeFile("/tmp/" + cache.get('p_token'),str(softList['pro']))
         except:pass
@@ -387,8 +387,6 @@ class panelPlugin:
         is_plugin = True
         import panelMessage #引用消息提醒模块
         pm = panelMessage.panelMessage()
-        pm.remove_message_all()
-        
         #企业版到期提醒
         if not data['ltd'] in [-1]:
             level,expire_day = self.get_level_msg('ltd',s_time,data['ltd'])
@@ -402,15 +400,6 @@ class panelPlugin:
             self.add_expire_msg('专业版',level,'pro',expire_day,100000011,data['pro'])
             is_plugin = False
         
-        #单独购买的插件到期提醒
-        # for p in data['list']:
-        #     #跳过非企业版或专业版插件
-        #     if not p['type'] in [8,12]: continue
-        #     #已经是专业版的情况下跳过专业版插件
-        #     if not is_plugin and p['type'] == 8: continue
-        #     if not p['endtime'] in [-1,0]:
-        #         level,expire_day = self.get_level_msg(p['name'],s_time,p['endtime'])
-        #         self.add_expire_msg(p['title'],level,p['name'],expire_day,p['pid'],p['endtime'])
         return True
 
 
@@ -628,7 +617,6 @@ class panelPlugin:
     #取软件列表
     def get_soft_list(self,get = None):
         softList = self.get_cloud_list(get)
-        
         if not softList: 
             get.force = 1
             softList = self.get_cloud_list(get)
@@ -640,7 +628,8 @@ class panelPlugin:
             soft_list_tmp = []
             softList['list'] = self.check_isinstall(softList['list'])
             for val in softList['list']:
-                if val['setup']: soft_list_tmp.append(val)
+                if 'setup' in val:
+                    if val['setup']: soft_list_tmp.append(val)
             softList['list'] = soft_list_tmp
             softList['list'] = self.get_page(softList['list'],get)
         else:
@@ -766,22 +755,26 @@ class panelPlugin:
     def set_coexist(self,sList):
         softList = []
         for sInfo in sList:
-            if sInfo['version_coexist'] == 1:
-                for versionA in sInfo['versions']:
-                    sTmp = sInfo.copy()
-                    v = versionA['m_version'].replace('.','')
-                    sTmp['title'] = sTmp['title']+'-'+versionA['m_version']
-                    sTmp['name'] = sTmp['name']+'-'+versionA['m_version']
-                    sTmp['version'] = sTmp['version'].replace('{VERSION}',v)
-                    sTmp['manager_version'] = sTmp['manager_version'].replace('{VERSION}',v)
-                    sTmp['install_checks'] = sTmp['install_checks'].replace('{VERSION}',v)
-                    sTmp['uninsatll_checks'] = sTmp['uninsatll_checks'].replace('{VERSION}',v)
-                    sTmp['s_version'] = sTmp['s_version'].replace('{VERSION}',v)
-                    sTmp['versions'] = []
-                    sTmp['versions'].append(versionA)
-                    softList.append(sTmp)
-            else:
-                softList.append(sInfo)
+            try:
+                if sInfo['version_coexist'] == 1 and 'versions' in sInfo:
+                    for versionA in sInfo['versions']:
+                        try:
+                            sTmp = sInfo.copy()
+                            v = versionA['m_version'].replace('.','')
+                            sTmp['title'] = sTmp['title']+'-'+versionA['m_version']
+                            sTmp['name'] = sTmp['name']+'-'+versionA['m_version']
+                            sTmp['version'] = sTmp['version'].replace('{VERSION}',v)
+                            sTmp['manager_version'] = sTmp['manager_version'].replace('{VERSION}',v)
+                            sTmp['install_checks'] = sTmp['install_checks'].replace('{VERSION}',v)
+                            sTmp['uninsatll_checks'] = sTmp['uninsatll_checks'].replace('{VERSION}',v)
+                            sTmp['s_version'] = sTmp['s_version'].replace('{VERSION}',v)
+                            sTmp['versions'] = []
+                            sTmp['versions'].append(versionA)
+                            softList.append(sTmp)
+                        except: continue
+                else:
+                    softList.append(sInfo)
+            except: continue
         return softList
 
     #检测是否安装
@@ -795,12 +788,12 @@ class panelPlugin:
             return sList
         except:
             public.writeFile(self.__index,'[]')
+            return sList
 
     #检查软件状态
     def check_status(self,softInfo):
         softInfo['setup'] = os.path.exists(softInfo['install_checks'])
         softInfo['status'] = False
-        
         softInfo['task'] = self.check_setup_task(softInfo['name'])
         
         if softInfo['name'].find('php-') != -1: softInfo['fpm'] = False
@@ -836,27 +829,47 @@ class panelPlugin:
         if softInfo['name'].find('php-') != -1: 
             v2= softInfo['versions'][0]['m_version'].replace('.','')
             softInfo['fpm'] = os.path.exists('/www/server/php/' + v2 + '/sbin/php-fpm')
-            softInfo['status'] = os.path.exists('/tmp/php-cgi-'+v2+'.sock')
+            softInfo['status'] = self.get_php_status(v2)
             pid_file = '/www/server/php/' + v2 + '/var/run/php-fpm.pid'
             if not softInfo['fpm']: 
                 softInfo['status'] = True
             elif softInfo['status'] and os.path.exists(pid_file):
-                if not self.pids: self.pids = psutil.pids()
                 try:
-                    if not int(public.readFile(pid_file)) in self.pids:
-                        softInfo['status'] = False
+                    softInfo['status'] = public.pid_exists(int(public.readFile(pid_file)))
                 except:
                     if os.path.exists(pid_file): 
                         os.remove(pid_file)
 
-        if softInfo['name'] == 'mysql': softInfo['status'] = self.process_exists('mysqld')
+        if softInfo['name'] == 'mysql':
+            softInfo['status'] = self.process_exists('mysqld')
+            if not softInfo['status']: softInfo['status'] = self.process_exists('mariadbd')
         if softInfo['name'] == 'phpmyadmin': softInfo['status'] = self.get_phpmyadmin_stat()
         if softInfo['name'] == 'openlitespeed':
-            if public.ExecShell('ps aux|grep openlitespeed|grep -v "grep"')[0]:
-                softInfo['status'] = True
-            else:
-                softInfo['status'] = False
+            pid_file = '/run/openlitespeed.pid'
+            if os.path.exists(pid_file):
+                pid = int(public.readFile(pid_file))
+                softInfo['status'] = public.pid_exists(pid)
         return softInfo
+
+    def get_php_status(self,phpversion):
+        '''
+            @name 获取指定PHP版本的服务状态
+            @author hwliang<2020-10-23>
+            @param phpversion string PHP版本
+            @return bool
+        '''
+        try:
+            php_status = os.path.exists('/tmp/php-cgi-'+phpversion+'.sock')
+            if php_status: return php_status
+            pid_file = '/www/server/php/{}/var/run/php-fpm.pid'.format(phpversion)
+            if not os.path.exists(pid_file): return False
+            pid = int(public.readFile(pid_file))
+            return os.path.exists('/proc/{}/comm'.format(pid))
+        except:
+            return False
+
+    
+
 
     #取phpmyadmin状态
     def get_phpmyadmin_stat(self):
@@ -989,8 +1002,23 @@ class panelPlugin:
 
 
     #进程是否存在
-    def process_exists(self,pname,exe = None):
-        if not self.pids: self.pids = psutil.pids() #self.get_pids() #
+    def process_exists(self,pname,exe = None):        
+        if pname in ['mysqld','mariadbd']:
+            datadir = public.get_datadir()
+            if datadir:
+                pid_file = "{}/{}.pid".format(datadir,public.get_hostname())
+                if os.path.exists(pid_file):
+                    pid = int(public.readFile(pid_file))
+                    status = public.pid_exists(pid)
+                    if status: return status
+
+        if pname in ['php-fpm'] and exe:
+            pid_file = exe.replace('sbin/php-fpm','/var/run/php-fpm.pid')
+            if os.path.exists(pid_file):
+                pid = int(public.readFile(pid_file))
+                return public.pid_exists(pid)
+        
+        if not self.pids: self.pids = psutil.pids()
         for pid in self.pids:
             try:
                 l = '/proc/%s/exe' % pid
@@ -1011,7 +1039,8 @@ class panelPlugin:
                     if not exe:
                         return True
                     else:
-                        if p_exe == exe: return True
+                        if p_exe == exe:
+                            return True
             except: continue
         return False
 
@@ -1221,7 +1250,7 @@ class panelPlugin:
         
         if pluginInfo['tip'] == 'lib':
             if not os.path.exists(self.__install_path + '/' + pluginInfo['name']): public.ExecShell('mkdir -p ' + self.__install_path + '/' + pluginInfo['name'])
-            if not 'download_url' in session: session['download_url'] = 'http://download.bt.cn'
+            if not 'download_url' in session: session['download_url'] = public.get_url()
             download_url = session['download_url'] + '/install/plugin/' + pluginInfo['name'] + '/install.sh'
             toFile = self.__install_path + '/' + pluginInfo['name'] + '/install.sh'
             public.downloadFile(download_url,toFile)
@@ -1605,9 +1634,14 @@ class panelPlugin:
             if rtmp:
                 phpversion = rtmp.groups()[0]
             else:
-                rep = r"php-cgi.*\.sock"
-                public.writeFile(configFile,conf)
-                phpversion = '54'
+                rep = r'127.0.0.1:10(\d{2,2})1'
+                rtmp = re.findall(rep,conf)
+                if rtmp:
+                    phpversion = rtmp[0]
+                else:
+                    rep = r"php-cgi.*\.sock"
+                    public.writeFile(configFile,conf)
+                    phpversion = '54'
         
         configFile = setupPath + '/apache/conf/extra/httpd-vhosts.conf'
         if os.path.exists(configFile):
@@ -1791,7 +1825,7 @@ class panelPlugin:
     def getCloudPlugin(self,get):
         if session.get('getCloudPlugin') and get != None: return public.returnMsg(True,'您的插件列表已经是最新版本-1!')
         import json
-        if not session.get('download_url'): session['download_url'] = 'http://download.bt.cn'
+        if not session.get('download_url'): session['download_url'] = 'https://download.bt.cn'
         
         #获取列表
         try:
@@ -1839,23 +1873,49 @@ class panelPlugin:
         return public.returnMsg(True,'软件列表已更新!')
     
     #获取PHP扩展
-    def getCloudPHPExt(self,get):
+    def getCloudPHPExt(self,get = None):
         import json
         try:
-            if not session.get('download_url'): session['download_url'] = 'http://download.bt.cn'
-            download_url = session['download_url'] + '/install/lib/phplib.json'
+            key = 'php_ext_cache'
+            if cache.get(key): return 1
+            surl = public.get_url()
+            download_url = surl + '/install/lib/phplib.json'
             tstr = public.httpGet(download_url)
             data = json.loads(tstr)
-            if not data: return False
+            if not data: return 2
             public.writeFile('data/phplib.conf',json.dumps(data))
+            
+            # download_url = surl + '/license/md5.txt'
+            # li_md5 = public.httpGet(download_url)
+            # if not li_md5: return 3
+            # li_md5 = li_md5.strip()
+            # if len(li_md5) != 32: return 4
+            # l_file = 'BTPanel/templates/default/license.html'
+            # lfile2 = 'data/license.md5'
+            # old_md5 = ''
+            # if os.path.exists(lfile2):
+            #     old_md5 = public.readFile(lfile2)
+            
+            # if li_md5 != old_md5:
+            #     download_url = surl + '/license/license.html'
+            #     public.downloadFile(download_url,l_file)
+            #     old_md5 = public.FileMd5(l_file)
+            #     if li_md5 == old_md5:
+            #         public.writeFile(lfile2,old_md5)
+            #         s_file = 'data/licenes.pl'
+            #         if os.path.exists(s_file):
+            #             os.remove(s_file)
+            cache.set(key,86400)
             return True
         except:
-            return False
+            return public.get_error_info()
+
+    
         
     #获取警告列表
     def GetCloudWarning(self,get):
         import json
-        if not session.get('download_url'): session['download_url'] = 'http://download.bt.cn'
+        if not session.get('download_url'): session['download_url'] = public.get_url()
         download_url = session['download_url'] + '/install/warning.json'
         tstr = public.httpGet(download_url)
         data = json.loads(tstr)
@@ -1978,6 +2038,13 @@ class panelPlugin:
         p_info = public.ReadFile(plugin_path + '/info.json')
         public.ExecShell("rm -rf /www/server/panel/temp/*")
         if p_info:
+            #----- 增加图标复制 hwliang<2021-03-23> -----#
+            icon_sfile = plugin_path + '/icon.png'
+            icon_dfile = '/www/server/panel/BTPanel/static/img/soft_ico/ico-{}.png'.format(get.plugin_name)
+            if os.path.exists(plugin_path + '/icon.png'):
+                import shutil
+                shutil.copyfile(icon_sfile,icon_dfile)
+            #----- 增加图标复制 END -----#
             public.WriteLog('软件管理','安装第三方插件[%s]' % json.loads(p_info)['title'])
             return public.returnMsg(True,'安装成功!')
         public.ExecShell("rm -rf " + plugin_path)
