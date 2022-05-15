@@ -4,22 +4,22 @@ export PATH
 LANG=en_US.UTF-8
 
 installpanel_admin_path_pl=False #取消入口限制
-installpanel_port=1111 #面板端口
+installpanel_port=1111           #面板端口
 
-if [ ! -d /www/server/panel/BTPanel ];then
+if [ ! -d /www/server/panel/BTPanel ]; then
 	echo "============================================="
 	echo "错误, 5.x不可以使用此命令升级!"
 	echo "5.9平滑升级到6.0的命令：curl http://download.bt.cn/install/update_to_6.sh|bash"
-	exit 0;
+	exit 0
 fi
 
 public_file=/www/server/panel/install/public.sh
-publicFileMd5=$(md5sum ${public_file} 2>/dev/null|awk '{print $1}')
+publicFileMd5=$(md5sum ${public_file} 2>/dev/null | awk '{print $1}')
 md5check="acfc18417ee58c64ff99d186f855e3e1"
-if [ "${publicFileMd5}" != "${md5check}"  ]; then
-	wget -O Tpublic.sh http://download.bt.cn/install/public.sh -T 20;
-	publicFileMd5=$(md5sum Tpublic.sh 2>/dev/null|awk '{print $1}')
-	if [ "${publicFileMd5}" == "${md5check}"  ]; then
+if [ "${publicFileMd5}" != "${md5check}" ]; then
+	wget -O Tpublic.sh http://download.bt.cn/install/public.sh -T 20
+	publicFileMd5=$(md5sum Tpublic.sh 2>/dev/null | awk '{print $1}')
+	if [ "${publicFileMd5}" == "${md5check}" ]; then
 		\cp -rpa Tpublic.sh $public_file
 	fi
 	rm -f Tpublic.sh
@@ -27,7 +27,7 @@ fi
 . $public_file
 
 Centos8Check=$(cat /etc/redhat-release | grep ' 8.' | grep -iE 'centos|Red Hat')
-if [ "${Centos8Check}" ];then
+if [ "${Centos8Check}" ]; then
 	if [ ! -f "/usr/bin/python" ] && [ -f "/usr/bin/python3" ] && [ ! -d "/www/server/panel/pyenv" ]; then
 		ln -sf /usr/bin/python3 /usr/bin/python
 	fi
@@ -35,7 +35,7 @@ fi
 
 mypip="pip"
 env_path=/www/server/panel/pyenv/bin/activate
-if [ -f $env_path ];then
+if [ -f $env_path ]; then
 	mypip="/www/server/panel/pyenv/bin/pip"
 fi
 
@@ -51,16 +51,16 @@ version=7.7.0
 # 	version='7.7.0'
 # fi
 wget -T 5 -O /tmp/panel.zip https://bt.qste.com/others/LinuxPanel-7.7.0.zip
-dsize=$(du -b /tmp/panel.zip|awk '{print $1}')
-if [ $dsize -lt 10240 ];then
+dsize=$(du -b /tmp/panel.zip | awk '{print $1}')
+if [ $dsize -lt 10240 ]; then
 	echo "获取更新包失败，请稍后更新或联系宝塔运维"
-	exit;
+	exit
 fi
-unzip -o /tmp/panel.zip -d $setup_path/server/ > /dev/null
+unzip -o /tmp/panel.zip -d $setup_path/server/ >/dev/null
 rm -f /tmp/panel.zip
 cd $setup_path/server/panel/
-check_bt=`cat /etc/init.d/bt`
-if [ "${check_bt}" = "" ];then
+check_bt=$(cat /etc/init.d/bt)
+if [ "${check_bt}" = "" ]; then
 	rm -f /etc/init.d/bt
 	wget -O /etc/init.d/bt $download_Url/install/src/bt6.init -T 20
 	chmod +x /etc/init.d/bt
@@ -71,12 +71,12 @@ rm -f /www/server/panel/class/*.pyc
 #pip install itsdangerous==0.24
 
 pip_list=$($mypip list)
-request_v=$(echo "$pip_list"|grep requests)
-if [ "$request_v" = "" ];then
+request_v=$(echo "$pip_list" | grep requests)
+if [ "$request_v" = "" ]; then
 	$mypip install requests
 fi
-openssl_v=$(echo "$pip_list"|grep pyOpenSSL)
-if [ "$openssl_v" = "" ];then
+openssl_v=$(echo "$pip_list" | grep pyOpenSSL)
+if [ "$openssl_v" = "" ]; then
 	$mypip install pyOpenSSL
 fi
 
@@ -85,13 +85,13 @@ fi
 #	$mypip install cffi==1.12.3
 #fi
 
-pymysql=$(echo "$pip_list"|grep pymysql)
-if [ "$pymysql" = "" ];then
+pymysql=$(echo "$pip_list" | grep pymysql)
+if [ "$pymysql" = "" ]; then
 	$mypip install pymysql
 fi
 
-pymysql=$(echo "$pip_list"|grep pycryptodome)
-if [ "$pymysql" = "" ];then
+pymysql=$(echo "$pip_list" | grep pycryptodome)
+if [ "$pymysql" = "" ]; then
 	$mypip install pycryptodome
 fi
 
@@ -100,25 +100,21 @@ fi
 #	$mypip install -U psutil
 #fi
 
-if [ -d /www/server/panel/class/BTPanel ];then
+if [ -d /www/server/panel/class/BTPanel ]; then
 	rm -rf /www/server/panel/class/BTPanel
-fi
-
-if [ -d /www/server/panel/data/bind.pl ];then
-	rm -rf /www/server/panel/data/bind.pl
 fi
 
 chattr -i /etc/init.d/bt
 chmod +x /etc/init.d/bt
 
 #取消入口限制
-if [[ "${installpanel_admin_path_pl}" == "False" ]];then
-bt 11
+if [[ "${installpanel_admin_path_pl}" == "False" ]]; then
+	bt 11
 fi
 
 #改端口
-if [[ "${installpanel_port}" ]];then
-bt 8 <<EOF
+if [[ "${installpanel_port}" ]]; then
+	bt 8 <<EOF
 $installpanel_port
 EOF
 fi
@@ -126,12 +122,31 @@ fi
 bt 25
 bt 18
 
+echo -e "正在关闭强制绑定......"
+userinfo=/www/server/panel/data/userInfo.json
+if [ -f "${userinfo}" ]; then
+	chattr -i ${userinfo}
+	rm -f ${userinfo}
+fi
+rm -f /www/server/panel/data/bind.pl
+rm -f /www/server/panel/data/sid.pl
+
+echo -e "正在关闭活动推荐与在线客服......"
+if [ ! -f /www/server/panel/data/not_recommend.pl ]; then
+	echo "True" >/www/server/panel/data/not_recommend.pl
+fi
+if [ ! -f /www/server/panel/data/not_workorder.pl ]; then
+	echo "True" >/www/server/panel/data/not_workorder.pl
+fi
+echo -e "正在关闭首页软件推荐与广告......"
+sed -i "/return config/, /return /d" /www/server/panel/BTPanel/static/js/public.js
+echo -e "正在关闭宝塔拉黑检测与提示......"
+sed -i '/self._check_url/d' /www/server/panel/class/panelPlugin.py
+
 echo "====================================="
 rm -f /dev/shm/bt_sql_tips.pl
-kill $(ps aux|grep -E "task.pyc|main.py"|grep -v grep|awk '{print $2}')
+kill $(ps aux | grep -E "task.pyc|main.py" | grep -v grep | awk '{print $2}')
 /etc/init.d/bt start
-echo 'True' > /www/server/panel/data/restart.pl
+echo 'True' >/www/server/panel/data/restart.pl
 pkill -9 gunicorn &
-echo "已成功升级到[$version]${Ver}";
-
-
+echo "已成功升级到[$version]${Ver}"
