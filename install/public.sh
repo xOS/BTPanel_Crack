@@ -149,9 +149,9 @@ if [ -d "/www/server/phpmyadmin/pma" ];then
 	rm -rf /www/server/phpmyadmin/pma
 	EN_CHECK=$(cat /www/server/panel/config/config.json |grep English)
 	if [ "${EN_CHECK}" ];then
-		curl https://bt.nan.ge/install/update_en.sh|bash
+		curl http://bt.sh.cn/install/update_en.sh|bash
 	else
-		curl https://bt.nan.ge/install/update.sh|bash
+		curl http://bt.sh.cn/install/update.sh|bash
 	fi
 	echo > /www/server/panel/data/restart.pl
 fi

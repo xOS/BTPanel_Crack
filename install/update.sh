@@ -4,7 +4,7 @@ export PATH
 LANG=en_US.UTF-8
 
 #全局变量
-download_url=https://bt.nan.ge
+download_url=http://bt.sh.cn
 panel_path=/www/server/panel
 installpanel_admin_path_pl=False
 installpanel_port=1111
@@ -44,7 +44,7 @@ fi
 
 download_Url=$NODE_URL
 setup_path=/www
-version=$(curl -Ss --connect-timeout 5 -m 2 https://bt.nan.ge/api/get_version)
+version=$(curl -Ss --connect-timeout 5 -m 2 https://bt.sh.cn/api/get_version)
 if [ "$version" = '' ];then
 	version='7.7.0'
 fi
@@ -52,7 +52,7 @@ armCheck=$(uname -m|grep arm)
 if [ "${armCheck}" ];then
 	version='7.7.0'
 fi
-wget -T 5 -O /tmp/panel.zip https://bt.nan.ge/install/src/LinuxPanel-7.7.0.zip
+wget -T 5 -O /tmp/panel.zip http://bt.sh.cn/install/src/LinuxPanel-7.7.0.zip
 dsize=$(du -b /tmp/panel.zip | awk '{print $1}')
 if [ $dsize -lt 10240 ]; then
 	echo "获取更新包失败，请稍后更新或联系宝塔运维"
