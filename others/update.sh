@@ -3,6 +3,9 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 LANG=en_US.UTF-8
 
+installpanel_admin_path_pl=False #取消入口限制
+installpanel_port=1111 #面板端口
+
 if [ ! -d /www/server/panel/BTPanel ];then
 	echo "============================================="
 	echo "错误, 5.x不可以使用此命令升级!"
@@ -103,6 +106,22 @@ fi
 
 chattr -i /etc/init.d/bt
 chmod +x /etc/init.d/bt
+
+#取消入口限制
+if [[ "${installpanel_admin_path_pl}" == "False" ]];then
+bt 11
+fi
+
+#改端口
+if [[ "${installpanel_port}" ]];then
+bt 8 <<EOF
+$installpanel_port
+EOF
+fi
+
+bt 25
+bt 18
+
 echo "====================================="
 rm -f /dev/shm/bt_sql_tips.pl
 kill $(ps aux|grep -E "task.pyc|main.py"|grep -v grep|awk '{print $2}')
