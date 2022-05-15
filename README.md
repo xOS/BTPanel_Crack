@@ -1,5 +1,5 @@
 # 宝塔面板破解
-> 目前最新版7.7.0 可用
+> 目前 7.7.0 可用
 ## 操作
 
 * html文件替换路径：
@@ -24,12 +24,12 @@ chattr +i /www/server/panel/BTPanel/static/js/index.js
 ## 升级到7.7.0操作
 
 ```bash
-curl https://bt.qste.com/others/update.sh|bash
+curl http://bt.sh.cn/update.sh|bash
 ```
 
-## 移除强绑窗口
+## 直装 7.7.0
 
 ```bash
-rm -rf /www/server/panel/data/bind.pl
+curl -sSO http://bt.sh.cn/bt_install.sh && bash bt_install.sh
 ```
 

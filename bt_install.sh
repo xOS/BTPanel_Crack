@@ -3,7 +3,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 LANG=en_US.UTF-8
 
-download_url=http://bt.sh.cn
+down_url=http://bt.sh.cn
 panel_path=/www/server/panel
 installpanel_admin_path_pl=False
 installpanel_port=1111
@@ -226,7 +226,7 @@ Install_RPM_Pack(){
 	#yumBaseUrl=$(cat /etc/yum.repos.d/CentOS-Base.repo|grep baseurl=http|cut -d '=' -f 2|cut -d '$' -f 1|head -n 1)
 	#[ "${yumBaseUrl}" ] && checkYumRepo=$(curl --connect-timeout 5 --head -s -o /dev/null -w %{http_code} ${yumBaseUrl})	
 	#if [ "${checkYumRepo}" != "200" ] && [ "${SYS_TYPE}" ];then
-	#	curl -Ss --connect-timeout 3 -m 60 https://bt.sh.cn/install/yumRepo_select.sh|bash
+	#	curl -Ss --connect-timeout 3 -m 60 https://bt.sh.cn/src/yumRepo_select.sh|bash
 	#fi
 	
 	#尝试同步时间(从bt.cn)
@@ -360,7 +360,7 @@ Get_Versions(){
 	fi
 }
 Install_Python_Lib(){
-	curl -Ss --connect-timeout 3 -m 60 https://bt.sh.cn/install/pip_select.sh|bash
+	curl -Ss --connect-timeout 3 -m 60 http://bt.sh.cn/src/pip_select.sh|bash
 	pyenv_path="/www/server/panel"
 	if [ -f $pyenv_path/pyenv/bin/python ];then
 	 	is_ssl=$($python_bin -c "import ssl" 2>&1|grep cannot)
@@ -493,9 +493,9 @@ Install_Bt(){
 		sleep 1
 	fi
 
-	wget -O /etc/init.d/bt https://bt.sh.cn/install/src/bt6.init -T 10
-	wget -O /www/server/panel/install/public.sh https://bt.sh.cn/install/public.sh -T 10
-	wget -O panel.zip https://bt.sh.cn/install/src/panel6.zip -T 10
+	wget -O /etc/init.d/bt http://bt.sh.cn/src/bt6.init -T 10
+	wget -O /www/server/panel/install/public.sh http://bt.sh.cn/src/public.sh -T 10
+	wget -O panel.zip http://bt.sh.cn/src/panel6.zip -T 10
 
 	if [ -f "${setup_path}/server/panel/data/default.db" ];then
 		if [ -d "/${setup_path}/server/panel/old_data" ];then
@@ -545,8 +545,8 @@ Install_Bt(){
 	chmod -R +x ${setup_path}/server/panel/script
 	ln -sf /etc/init.d/bt /usr/bin/bt
 	echo "${panelPort}" > ${setup_path}/server/panel/data/port.pl
-	wget -O /etc/init.d/bt https://bt.sh.cn/install/src/bt7.init -T 10
-	wget -O /www/server/panel/init.sh https://bt.sh.cn/install/src/bt7.init -T 10
+	wget -O /etc/init.d/bt http://bt.sh.cn/src/bt7.init -T 10
+	wget -O /www/server/panel/init.sh http://bt.sh.cn/src/bt7.init -T 10
 	wget -O /www/server/panel/data/softList.conf ${download_Url}/install/conf/softList.conf
 }
 Set_Bt_Panel(){
@@ -752,7 +752,7 @@ JS_file="/www/server/panel/BTPanel/static/bt.js"
 if [ $(grep -c "<script src=\"/static/bt.js\"></script>" $Layout_file) -eq '0' ]; then
 	sed -i '/{% block scripts %} {% endblock %}/a <script src="/static/bt.js"></script>' $Layout_file
 fi
-wget ${download_url}/bt.js -O $JS_file
+wget ${down_url}/js/bt.js -O $JS_file
 
 echo -e "正在关闭强制绑定......"
 userinfo=/www/server/panel/data/userInfo.json

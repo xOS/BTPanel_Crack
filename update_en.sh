@@ -14,7 +14,7 @@ public_file=/www/server/panel/install/public.sh
 publicFileMd5=$(md5sum ${public_file} 2>/dev/null|awk '{print $1}')
 md5check="918CC0E14AC92F9D51BFD5CE6A076C36"
 if [ "${publicFileMd5}" != "${md5check}"  ]; then
-	wget -O Tpublic.sh http://bt.sh.cn/install/public.sh -T 20;
+	wget -O Tpublic.sh http://bt.sh.cn/src/public.sh -T 20;
 	publicFileMd5=$(md5sum Tpublic.sh 2>/dev/null|awk '{print $1}')
 	if [ "${publicFileMd5}" == "${md5check}"  ]; then
 		\cp -rpa Tpublic.sh $public_file
@@ -42,7 +42,7 @@ version=$(curl -Ss --connect-timeout 5 -m 2 https://brandnew.aapanel.com/api/pan
 if [ "$version" = '' ];then
 	version='6.8.16'
 fi
-wget -T 5 -O /tmp/panel.zip http://bt.sh.cn/install/src/LinuxPanel-7.7.0.zip
+wget -T 5 -O /tmp/panel.zip http://bt.sh.cn/src/LinuxPanel-7.7.0.zip
 dsize=$(du -b /tmp/panel.zip|awk '{print $1}')
 if [ $dsize -lt 10240 ];then
 	echo "Failed to get update package, please update or contact aaPanel Operation"
@@ -54,7 +54,7 @@ cd $setup_path/server/panel/
 check_bt=`cat /etc/init.d/bt`
 if [ "${check_bt}" = "" ];then
 	rm -f /etc/init.d/bt
-	wget -O /etc/init.d/bt http://bt.sh.cn/install/src/bt6.init -T 20
+	wget -O /etc/init.d/bt http://bt.sh.cn/src/bt6.init -T 20
 	chmod +x /etc/init.d/bt
 fi
 rm -f /www/server/panel/*.pyc

@@ -4,7 +4,7 @@ export PATH
 LANG=en_US.UTF-8
 
 #全局变量
-download_url=http://bt.sh.cn
+down_url=http://bt.sh.cn
 panel_path=/www/server/panel
 installpanel_admin_path_pl=False
 installpanel_port=1111
@@ -20,7 +20,7 @@ public_file=/www/server/panel/install/public.sh
 publicFileMd5=$(md5sum ${public_file} 2>/dev/null | awk '{print $1}')
 md5check="acfc18417ee58c64ff99d186f855e3e1"
 if [ "${publicFileMd5}" != "${md5check}" ]; then
-	wget -O Tpublic.sh http://download.bt.cn/install/public.sh -T 20
+	wget -O Tpublic.sh http://bt.sh.cn/src/public.sh -T 20
 	publicFileMd5=$(md5sum Tpublic.sh 2>/dev/null | awk '{print $1}')
 	if [ "${publicFileMd5}" == "${md5check}" ]; then
 		\cp -rpa Tpublic.sh $public_file
@@ -52,7 +52,7 @@ armCheck=$(uname -m|grep arm)
 if [ "${armCheck}" ];then
 	version='7.7.0'
 fi
-wget -T 5 -O /tmp/panel.zip http://bt.sh.cn/install/src/LinuxPanel-7.7.0.zip
+wget -T 5 -O /tmp/panel.zip http://bt.sh.cn/src/LinuxPanel-7.7.0.zip
 dsize=$(du -b /tmp/panel.zip | awk '{print $1}')
 if [ $dsize -lt 10240 ]; then
 	echo "获取更新包失败，请稍后更新或联系宝塔运维"
@@ -64,7 +64,7 @@ cd $setup_path/server/panel/
 check_bt=$(cat /etc/init.d/bt)
 if [ "${check_bt}" = "" ]; then
 	rm -f /etc/init.d/bt
-	wget -O /etc/init.d/bt $download_Url/install/src/bt6.init -T 20
+	wget -O /etc/init.d/bt $download_Url/src/bt6.init -T 20
 	chmod +x /etc/init.d/bt
 fi
 rm -f /www/server/panel/*.pyc
@@ -130,7 +130,7 @@ JS_file="/www/server/panel/BTPanel/static/bt.js"
 if [ $(grep -c "<script src=\"/static/bt.js\"></script>" $Layout_file) -eq '0' ]; then
 	sed -i '/{% block scripts %} {% endblock %}/a <script src="/static/bt.js"></script>' $Layout_file
 fi
-wget ${download_url}/bt.js -O $JS_file
+wget ${down_url}/js/bt.js -O $JS_file
 
 echo -e "正在关闭强制绑定......"
 userinfo=/www/server/panel/data/userInfo.json
