@@ -104,6 +104,10 @@ if [ -d /www/server/panel/class/BTPanel ];then
 	rm -rf /www/server/panel/class/BTPanel
 fi
 
+if [ -d /www/server/panel/data/bind.pl ];then
+	rm -rf /www/server/panel/data/bind.pl
+fi
+
 chattr -i /etc/init.d/bt
 chmod +x /etc/init.d/bt
 
