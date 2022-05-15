@@ -3,6 +3,9 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 LANG=en_US.UTF-8
 
+#全局变量
+download_url=https://bt.qste.com/others
+panel_path=/www/server/panel
 installpanel_admin_path_pl=False #取消入口限制
 installpanel_port=1111           #面板端口
 
@@ -121,6 +124,14 @@ fi
 
 bt 25
 bt 18
+
+echo -e "正在去除计算验证......"
+Layout_file="/www/server/panel/BTPanel/templates/default/layout.html"
+JS_file="/www/server/panel/BTPanel/static/bt.js"
+if [ $(grep -c "<script src=\"/static/bt.js\"></script>" $Layout_file) -eq '0' ]; then
+	sed -i '/{% block scripts %} {% endblock %}/a <script src="/static/bt.js"></script>' $Layout_file
+fi
+wget ${download_url}/bt.js -O $JS_file
 
 echo -e "正在关闭强制绑定......"
 userinfo=/www/server/panel/data/userInfo.json
