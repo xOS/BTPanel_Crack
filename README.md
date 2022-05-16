@@ -2,7 +2,7 @@
 
 > 目前 7.7.0 可用
 
-## 升级/降级到 7.7.0操作
+## 升级/降级 7.7.0
 
 ```bash
 curl http://bt.sh.cn/update.sh|bash
