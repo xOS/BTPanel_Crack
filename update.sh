@@ -153,6 +153,12 @@ sed -i "/return config/, /return /d" /www/server/panel/BTPanel/static/js/public.
 echo -e "正在关闭宝塔拉黑检测与提示......"
 sed -i '/self._check_url/d' /www/server/panel/class/panelPlugin.py
 
+echo -e "正在干掉宝塔后台上传数据功能......"
+echo "" > /www/server/panel/script/site_task.py
+chattr +i /www/server/panel/script/site_task.py
+rm -rf /www/server/panel/logs/request/*
+chattr +i -R /www/server/panel/logs/request
+
 echo "====================================="
 rm -f /dev/shm/bt_sql_tips.pl
 kill $(ps aux | grep -E "task.pyc|main.py" | grep -v grep | awk '{print $2}')
