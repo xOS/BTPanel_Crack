@@ -111,6 +111,7 @@ chmod +x /etc/init.d/bt
 
 #取消入口限制
 if [[ "${installpanel_admin_path_pl}" == "False" ]]; then
+	auth_path=""
 	bt 11
 fi
 
