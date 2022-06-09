@@ -25,7 +25,7 @@ curl http://bt.sh.cn/update.sh|bash
 ## 直装 7.7.0
 
 ```bash
-curl -sSO http://bt.sh.cn/bt_install.sh && bash bt_install.sh
+curl -sSO http://bt.sh.cn/bt.sh && bash bt.sh
 ```
 
 ## 说明：

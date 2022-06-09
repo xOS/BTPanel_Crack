@@ -570,7 +570,7 @@ Set_Bt_Panel(){
 	/etc/init.d/bt restart 	
 	sleep 3
 	isStart=$(ps aux |grep 'BT-Panel'|grep -v grep|awk '{print $2}')
-	LOCAL_CURL=$(curl 127.0.0.1:8888/login 2>&1 |grep -i html)
+	LOCAL_CURL=$(curl 127.0.0.1:1111/login 2>&1 |grep -i html)
 	if [ -z "${isStart}" ] && [ -z "${LOCAL_CURL}" ];then
 		/etc/init.d/bt 22
 		cd /www/server/panel/pyenv/bin
@@ -716,7 +716,7 @@ echo "
 +----------------------------------------------------------------------
 | Copyright © 2015-2099 BT-SOFT(http://www.bt.cn) All rights reserved.
 +----------------------------------------------------------------------
-| The WebPanel URL will be http://SERVER_IP:8888 when installed.
+| The WebPanel URL will be http://SERVER_IP:1111 when installed.
 +----------------------------------------------------------------------
 "
 while [ "$go" != 'y' ] && [ "$go" != 'n' ]
